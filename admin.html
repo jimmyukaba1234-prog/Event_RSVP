@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>RSVP Admin — 80th Birthday</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <div class="admin-layout" id="admin-layout">
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">🎉 80th Birthday RSVP</div>
+      <nav class="sidebar__nav">
+        <button class="nav-item is-active" data-view="dashboard" type="button">Dashboard</button>
+        <button class="nav-item" data-view="rsvps" type="button">RSVPs</button>
+        <button class="nav-item" data-view="export" type="button">Export</button>
+      </nav>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-header">
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Toggle menu">
+          &#9776;
+        </button>
+        <div class="admin-header__titles">
+          <p class="admin-header__eyebrow">RSVP Admin</p>
+          <h1>Stephen Raymond Dapaa-Addo<br />80th Birthday Celebration</h1>
+        </div>
+        <button class="refresh-btn" id="refresh-btn" type="button">Refresh</button>
+      </header>
+
+      <div class="admin-error" id="admin-error" hidden></div>
+
+      <main>
+        <!-- Dashboard view -->
+        <section class="view" id="view-dashboard" data-view="dashboard">
+          <h2 class="view__heading">Dashboard</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-card__label">Total RSVPs</span>
+              <span class="stat-card__value" id="stat-total">&ndash;</span>
+            </div>
+            <div class="stat-card stat-card--attending">
+              <span class="stat-card__label">Attending</span>
+              <span class="stat-card__value" id="stat-attending">&ndash;</span>
+            </div>
+            <div class="stat-card stat-card--maybe">
+              <span class="stat-card__label">Maybe Attending</span>
+              <span class="stat-card__value" id="stat-maybe">&ndash;</span>
+            </div>
+            <div class="stat-card stat-card--not_attending">
+              <span class="stat-card__label">Not Attending</span>
+              <span class="stat-card__value" id="stat-not-attending">&ndash;</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- RSVPs view -->
+        <section class="view" id="view-rsvps" data-view="rsvps">
+          <h2 class="view__heading">RSVP Guest List</h2>
+
+          <div class="controls">
+            <input
+              type="search"
+              id="search-input"
+              class="controls__search"
+              placeholder="Search by name or email"
+            />
+            <select id="status-filter" class="controls__select">
+              <option value="all">All</option>
+              <option value="attending">Attending</option>
+              <option value="maybe">Maybe</option>
+              <option value="not_attending">Not attending</option>
+            </select>
+            <button class="refresh-btn refresh-btn--secondary" id="refresh-btn-rsvps" type="button">
+              Refresh
+            </button>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Attendance</th>
+                  <th>Submitted</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rsvp-table-body"></tbody>
+            </table>
+          </div>
+
+          <p class="loading-state" id="loading-state" hidden>Loading RSVPs&hellip;</p>
+          <p class="empty-state" id="empty-state" hidden>No RSVPs found.</p>
+        </section>
+
+        <!-- Export view -->
+        <section class="view" id="view-export" data-view="export">
+          <h2 class="view__heading">Export Guest List</h2>
+          <p class="export-description">
+            Download the currently filtered guest list as a spreadsheet-ready file.
+          </p>
+          <div class="export-actions">
+            <button class="btn-primary" id="export-csv-btn" type="button">Export CSV</button>
+            <button class="btn-secondary" id="export-excel-btn" type="button" disabled title="Coming soon">
+              Export Excel (coming soon)
+            </button>
+          </div>
+          <p class="export-status" id="export-status"></p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
