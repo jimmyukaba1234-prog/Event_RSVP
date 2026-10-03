@@ -20,8 +20,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // load data from any origin not in this set.
 const ALLOWED_ORIGINS = new Set<string>([
   "http://localhost:5500",
-  "https://eventrevp.vercel.app",
-  "https://eventrevp-git-main-jim-ai-lab.vercel.app",
+  "https://stephen80.vercel.app",
+  "https://stephen80-git-main-jim-ai-lab.vercel.app",
 ]);
 
 function corsHeaders(origin: string | null): HeadersInit {
