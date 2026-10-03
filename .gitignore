@@ -1,7 +1,6 @@
 .env
 .env.*
 !.env.example
-js/config.js
 supabase/.temp/
 node_modules
 dist

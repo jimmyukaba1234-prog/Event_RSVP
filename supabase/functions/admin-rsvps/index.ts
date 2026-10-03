@@ -15,10 +15,13 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Add the deployed admin site's origin here once it's hosted somewhere
-// other than localhost (e.g. "https://your-site.netlify.app").
+// Update this list whenever the deployed domain changes (e.g. after
+// renaming the Vercel project) — the admin dashboard silently fails to
+// load data from any origin not in this set.
 const ALLOWED_ORIGINS = new Set<string>([
   "http://localhost:5500",
+  "https://eventrevp.vercel.app",
+  "https://eventrevp-git-main-jim-ai-lab.vercel.app",
 ]);
 
 function corsHeaders(origin: string | null): HeadersInit {

@@ -51,7 +51,7 @@ birthday-rsvp/
 ├── js/
 │   ├── app.js                          # Public RSVP form logic (validation, Supabase insert)
 │   ├── admin.js                        # Admin dashboard logic (fetch, render, filter, export)
-│   ├── config.js                       # Your real Supabase URL/anon key (gitignored, not committed)
+│   ├── config.js                       # Supabase URL/anon key (committed — see Environment variables)
 │   └── config.example.js               # Template for config.js
 ├── assets/
 │   └── invitation.jpg                  # The actual supplied invitation image
@@ -67,18 +67,7 @@ birthday-rsvp/
 ## Local setup
 
 1. Clone this repository and `cd` into it.
-2. Copy the config template and fill in your real Supabase values:
-   ```bash
-   cp js/config.example.js js/config.js
-   ```
-   Edit `js/config.js`:
-   ```js
-   window.SUPABASE_CONFIG = {
-     url: "https://YOUR_PROJECT_REF.supabase.co",
-     anonKey: "YOUR_ANON_PUBLIC_KEY",
-   };
-   ```
-   Get these from your Supabase project → **Settings → API** → Project URL and the `anon`/`public` key. **Never put the `service_role`/secret key here.**
+2. `js/config.js` is already committed with this project's real Supabase URL and anon key (see **Environment variables** below for why that's safe) — no setup needed. If you're reusing this project for a *different* Supabase instance, edit `js/config.js` directly, or copy `js/config.example.js` as a starting template.
 3. Serve the project with any static file server (needed for `fetch` to behave correctly — don't just open the HTML files via `file://`):
    ```bash
    python3 -m http.server 5500
@@ -99,6 +88,18 @@ birthday-rsvp/
 4. No manual secrets need to be set — `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are automatically available to every Edge Function in your project.
 5. If you deploy the admin page somewhere other than `http://localhost:5500`, add that origin to the `ALLOWED_ORIGINS` list in `supabase/functions/admin-rsvps/index.ts` and redeploy.
 
+## Deployment
+
+This is a static site — any static host works (Vercel, Netlify, GitHub Pages, Cloudflare Pages). No build command is needed; the publish directory is the repo root.
+
+Currently deployed on **Vercel**, connected directly to this GitHub repo (auto-deploys on push to `main`). Pages:
+- Public RSVP page: `https://<your-domain>/`
+- Admin dashboard: `https://<your-domain>/admin.html`
+
+To get a shorter/cleaner domain than Vercel's default preview URLs: Vercel Dashboard → your project → **Settings → General → Project Name**. Renaming the project changes its production `*.vercel.app` subdomain to match (e.g. `stephen-80th.vercel.app`). Note `.vercel.app` subdomains are globally unique across all Vercel users, so very short/generic names may already be taken.
+
+Remember step 5 above whenever the deployed domain changes — the Edge Function's CORS allow-list needs the new origin added and redeployed, or the admin dashboard will fail to load data from that domain.
+
 ## Database schema
 
 Table `rsvps`: `id` (uuid, auto-generated), `full_name`, `email`, `attendance_status` (`attending` / `maybe` / `not_attending`, enforced by a CHECK constraint), `created_at` (auto-set). See `supabase/schema.sql` for the full definition and RLS policies.
@@ -108,10 +109,10 @@ Table `rsvps`: `id` (uuid, auto-generated), `full_name`, `email`, `attendance_st
 | File | Committed? | Purpose |
 |---|---|---|
 | `.env.example` | Yes | Documents the two values needed (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) |
-| `js/config.js` | **No** (gitignored) | Your actual local values, loaded by both `index.html` and `admin.html` |
-| `js/config.example.js` | Yes | Template you copy to create `js/config.js` |
+| `js/config.js` | **Yes** | Actual values, loaded by both `index.html` and `admin.html` |
+| `js/config.example.js` | Yes | Generic template, useful if repurposing this project for a different Supabase project |
 
-This is a pure static site with no build step, so there's no tool to inject a `.env` file into the browser at runtime — `js/config.js` is the simplest correct substitute. This is safe because it only ever holds the public anon key, never a secret.
+This is a pure static site with no build step, so there's no tool to inject a `.env` file into the browser at runtime or into a host like Vercel/Netlify without extra configuration. `js/config.js` is committed directly as the simplest correct substitute — **this is safe specifically because it only ever holds the public anon key, never a secret.** The anon key is designed to be public; Row Level Security on the database, not secrecy of this key, is what actually protects the data (see Security approach above). The `service_role` key must never go in this file or anywhere else in this repo.
 
 ## Known limitations / future improvements
 
