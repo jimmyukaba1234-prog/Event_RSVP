@@ -17,6 +17,13 @@
   --color-error: #a3321f;
   --color-error-bg: #fbeae6;
 
+  --color-success: #2f7a4d;
+  --color-success-bg: #e8f3ec;
+  --color-maybe: #a9790f;
+  --color-maybe-bg: #faf1dc;
+  --color-not: #a3321f;
+  --color-not-bg: #fbeae6;
+
   --font-display: "Cormorant Garamond", Georgia, serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
@@ -153,6 +160,14 @@ h2 {
 }
 
 /* ---------- RSVP section ---------- */
+.rsvp {
+  background: linear-gradient(165deg, #fdf6e3 0%, #f7e9c9 100%);
+  border: 1px solid rgba(199, 160, 82, 0.4);
+  border-radius: 16px;
+  padding: 32px 20px;
+  box-shadow: var(--shadow-soft);
+}
+
 .rsvp__heading {
   text-align: center;
   font-size: 1.6rem;
@@ -243,18 +258,46 @@ h2 {
   display: block;
   padding: 14px 16px;
   border: 1.5px solid var(--color-border);
+  border-left: 4px solid var(--color-border);
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.98rem;
-  transition: border-color 0.15s ease, background 0.15s ease;
-  background: var(--color-bg);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  background: var(--color-surface);
+}
+
+.attendance-card--attending {
+  border-left-color: var(--color-success);
+}
+
+.attendance-card--maybe {
+  border-left-color: var(--color-maybe);
+}
+
+.attendance-card--not_attending {
+  border-left-color: var(--color-not);
 }
 
 .attendance-options input[type="radio"]:checked + .attendance-card {
-  border-color: var(--color-accent);
-  background: rgba(31, 47, 88, 0.07);
-  font-weight: 600;
-  color: var(--color-accent-dark);
+  font-weight: 700;
+}
+
+.attendance-options input[type="radio"]:checked + .attendance-card--attending {
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.attendance-options input[type="radio"]:checked + .attendance-card--maybe {
+  border-color: var(--color-maybe);
+  background: var(--color-maybe-bg);
+  color: var(--color-maybe);
+}
+
+.attendance-options input[type="radio"]:checked + .attendance-card--not_attending {
+  border-color: var(--color-not);
+  background: var(--color-not-bg);
+  color: var(--color-not);
 }
 
 .attendance-options input[type="radio"]:focus-visible + .attendance-card {
