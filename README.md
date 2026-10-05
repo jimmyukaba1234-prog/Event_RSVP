@@ -20,17 +20,17 @@ Guests visit a public page, see the invitation and event details, and submit the
 - HTML, CSS, vanilla JavaScript — no frontend framework, no build step
 - Supabase (PostgreSQL + Auto-generated REST API + Edge Functions)
 - Four Supabase Edge Functions (Deno/TypeScript): admin data read, confirmation email (single + batch), and check-in
-- SendGrid (transactional email API) for confirmation emails
+- Gmail SMTP (via a Google App Password) for confirmation emails — no third-party email service needed
 - Supabase JS client loaded via CDN `<script>` tag (no npm/bundler needed)
 
 ## Architecture
 
 ```
 Guest browser   →  Supabase REST API (anon key)        →  rsvps table   [INSERT only]
-Guest browser   →  Edge Function (send-confirmation)    →  rsvps table + SendGrid  [email this one new guest]
+Guest browser   →  Edge Function (send-confirmation)    →  rsvps table + Gmail SMTP  [email this one new guest]
 Guest's phone   →  Edge Function (checkin)               →  rsvps table   [mark checked_in, via QR link]
 Admin browser   →  Edge Function (admin-rsvps)           →  rsvps table   [SELECT, via service_role, server-side only]
-Admin browser   →  Edge Function (send-pending-confirmations)  →  rsvps table + SendGrid  [email everyone still pending]
+Admin browser   →  Edge Function (send-pending-confirmations)  →  rsvps table + Gmail SMTP  [email everyone still pending]
 ```
 
 The public page and the admin dashboard never talk to the database the same way:
@@ -46,7 +46,7 @@ The public page and the admin dashboard never talk to the database the same way:
 - **The Edge Function (`admin-rsvps`) uses `service_role`**, which bypasses RLS entirely, to read all RSVP data for the dashboard. The `service_role` key only ever exists as a Supabase Edge Function environment secret — it is never present in any file shipped to the browser, never committed to this repo, and never appears in any frontend JavaScript.
 - **The admin dashboard has no login/authentication.** This was a deliberate decision for this short-lived event, not an oversight: anyone who has the `admin.html` URL or the Edge Function URL can view guest names, emails, and attendance status. CORS on the Edge Function only restricts which *browser origins* can call it — it does nothing against a direct `curl`/script request. If you reuse this project for something with more sensitive data or a longer-lived dashboard, add real authentication (e.g. Supabase Auth) in front of the admin page and switch the Edge Function to require a valid session before adding that check back.
 - **Never commit or hardcode the `service_role` key anywhere in frontend code.** The only Supabase credential that belongs in the browser is the public **anon** key — it's safe there specifically because RLS, not secrecy of that key, is what protects the data.
-- **The SendGrid API key gets the same treatment as `service_role`**: it only ever exists as an Edge Function secret (`SENDGRID_API_KEY`), never in frontend code or this repo. Anyone holding it could send email as your verified sender, so it's just as sensitive as a database credential.
+- **The Gmail App Password gets the same treatment as `service_role`**: it only ever exists as an Edge Function secret (`GMAIL_APP_PASSWORD`), never in frontend code or this repo. Anyone holding it could send email as your Gmail account, so it's just as sensitive as a database credential. (It's a Google "App Password," scoped to mail sending — not your actual Google login password — and can be revoked anytime in your Google Account security settings.)
 - **The check-in link embedded in each QR code is an unguessable UUID, not a real access-control check.** Anyone who has a specific guest's link can check that one guest in — there's no way to enumerate other guests' links from it, so this is a reasonable, low-risk tradeoff for a short-lived event, not a hardened security boundary.
 
 ## Project structure
@@ -73,7 +73,7 @@ birthday-rsvp/
 │   └── functions/
 │       ├── _shared/
 │       │   ├── cors.ts                 # Shared CORS allow-list used by every function
-│       │   └── email.ts                # Shared QR code + HTML email builder + SendGrid send call
+│       │   └── email.ts                # Shared QR code + HTML email builder + Gmail SMTP send call
 │       ├── admin-rsvps/index.ts        # service_role read for the admin dashboard
 │       ├── send-confirmation/index.ts  # Emails one guest right after they RSVP
 │       ├── send-pending-confirmations/index.ts  # Admin-triggered backfill for guests missing an email
@@ -97,11 +97,11 @@ birthday-rsvp/
 
 1. Create a Supabase project.
 2. Run `supabase/schema.sql` once in the SQL Editor — creates the `rsvps` table, indexes, and RLS policies.
-3. Sign up for [SendGrid](https://sendgrid.com) (free tier: 100 emails/day), verify a **Single Sender** email address under Settings → Sender Authentication, and create an API key with **Mail Send** permission only.
+3. Create a Google **App Password** for the Gmail account you want to send from: turn on 2-Step Verification for that Google account, then go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), create a password (name it anything, e.g. "Birthday RSVP"), and copy the 16-character code it gives you. This is NOT your Gmail login password — it's a revocable, mail-only credential.
 4. Set the email-related secrets (run these yourself — they're sensitive, don't paste them into a shared chat/terminal session):
    ```bash
-   supabase secrets set SENDGRID_API_KEY=<your SendGrid API key>
-   supabase secrets set SENDGRID_FROM_EMAIL=<the single-sender email you verified>
+   supabase secrets set GMAIL_USER=<your-gmail-address@gmail.com>
+   supabase secrets set GMAIL_APP_PASSWORD=<the 16-char app password, no spaces>
    supabase secrets set APP_BASE_URL=https://<your-deployed-domain>
    ```
    `APP_BASE_URL` is used to build the full check-in link embedded in each QR code — it must match whatever domain `checkin.html` is actually served from.
@@ -141,8 +141,8 @@ Table `rsvps`: `id` (uuid, client-generated at submit time so the browser can tr
 | `.env.example` | Yes | Documents the two frontend values needed (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) |
 | `js/config.js` | **Yes** | Actual frontend values, loaded by `index.html`, `admin.html`, and `checkin.html` |
 | `js/config.example.js` | Yes | Generic template, useful if repurposing this project for a different Supabase project |
-| `SENDGRID_API_KEY` (Edge Function secret) | **Never** | SendGrid API key, Mail Send permission only — server-side only, same sensitivity as `service_role` |
-| `SENDGRID_FROM_EMAIL` (Edge Function secret) | **Never** | The verified single-sender email address emails are sent from |
+| `GMAIL_USER` (Edge Function secret) | **Never** | The Gmail address emails are sent from |
+| `GMAIL_APP_PASSWORD` (Edge Function secret) | **Never** | Google App Password (mail-only, revocable) — server-side only, same sensitivity as `service_role` |
 | `APP_BASE_URL` (Edge Function secret) | **Never** | The deployed site's base URL, used to build check-in links embedded in QR codes |
 
 This is a pure static site with no build step, so there's no tool to inject a `.env` file into the browser at runtime or into a host like Vercel/Netlify without extra configuration. `js/config.js` is committed directly as the simplest correct substitute — **this is safe specifically because it only ever holds the public anon key, never a secret.** The anon key is designed to be public; Row Level Security on the database, not secrecy of this key, is what actually protects the data (see Security approach above). The `service_role` key must never go in this file or anywhere else in this repo.
@@ -155,4 +155,5 @@ This is a pure static site with no build step, so there's no tool to inject a `.
 - No Excel export yet (CSV only).
 - `send-pending-confirmations` sends one email at a time in a loop — fine for a guest list of this size, but would need batching/parallelism for a much larger event.
 - The check-in link's security is "unguessable UUID," not real access control — acceptable for a short-lived private event, not for anything higher-stakes (see Security approach above).
-- If a guest's confirmation email fails to send (e.g. SendGrid hiccup), there's no automatic retry — use "Send to Pending Guests" in the admin dashboard to retry everyone still missing one.
+- If a guest's confirmation email fails to send (e.g. a Gmail SMTP hiccup), there's no automatic retry — use "Send to Pending Guests" in the admin dashboard to retry everyone still missing one.
+- Gmail SMTP has a sending cap of roughly 500 emails/day for a standard account — plenty for this event, but worth knowing if the guest list is unexpectedly huge.

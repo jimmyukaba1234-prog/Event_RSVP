@@ -1,6 +1,14 @@
 // Shared email-sending logic for the confirmation emails. Used by both
 // send-confirmation (single guest, fired right after RSVP) and
 // send-pending-confirmations (admin-triggered backfill).
+//
+// Sends through Gmail SMTP using a Google App Password — no third-party
+// email service account needed. Required Edge Function secrets:
+//   GMAIL_USER          the Gmail address emails are sent from
+//   GMAIL_APP_PASSWORD  a 16-char Google App Password (NOT your login password)
+//   APP_BASE_URL        the deployed site URL, for building check-in QR links
+
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const STATUS_LABELS: Record<string, string> = {
   attending: "Attending",
@@ -32,7 +40,7 @@ function buildEmailHtml(rsvp: { full_name: string; attendance_status: string }, 
       <tr>
         <td style="padding:14px 0;border-bottom:1px solid #e2ddd0;">
           <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#c7a052;font-weight:600;">Thanksgiving Service</div>
-          <div style="font-size:16px;color:#20232c;font-weight:600;">Anglican Church, Diocese of Accra</div>
+          <div style="font-size:16px;color:#20232c;font-weight:600;">Christ Church</div>
           <div style="font-size:14px;color:#5b6170;">University of Ghana, Legon &mdash; 11:00 AM</div>
         </td>
       </tr>
@@ -82,12 +90,12 @@ function buildEmailHtml(rsvp: { full_name: string; attendance_status: string }, 
 export async function sendConfirmationEmail(
   rsvp: { id: string; full_name: string; email: string; attendance_status: string }
 ): Promise<{ ok: boolean; error?: string }> {
-  const apiKey = Deno.env.get("SENDGRID_API_KEY");
-  const fromEmail = Deno.env.get("SENDGRID_FROM_EMAIL");
+  const gmailUser = Deno.env.get("GMAIL_USER");
+  const gmailAppPassword = Deno.env.get("GMAIL_APP_PASSWORD");
   const appBaseUrl = Deno.env.get("APP_BASE_URL");
 
-  if (!apiKey || !fromEmail || !appBaseUrl) {
-    return { ok: false, error: "Missing SENDGRID_API_KEY, SENDGRID_FROM_EMAIL, or APP_BASE_URL secret" };
+  if (!gmailUser || !gmailAppPassword || !appBaseUrl) {
+    return { ok: false, error: "Missing GMAIL_USER, GMAIL_APP_PASSWORD, or APP_BASE_URL secret" };
   }
 
   const checkInUrl = buildCheckInUrl(appBaseUrl, rsvp.id);
@@ -97,24 +105,30 @@ export async function sendConfirmationEmail(
     ? "You're confirmed! Stephen's 80th Birthday Celebration"
     : "Thanks for your response — Stephen's 80th Birthday";
 
-  const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+  const client = new SMTPClient({
+    connection: {
+      hostname: "smtp.gmail.com",
+      port: 465,
+      tls: true,
+      auth: { username: gmailUser, password: gmailAppPassword },
     },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: rsvp.email, name: rsvp.full_name }] }],
-      from: { email: fromEmail, name: "Stephen's 80th Birthday" },
-      subject,
-      content: [{ type: "text/html", value: html }],
-    }),
   });
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "");
-    return { ok: false, error: `SendGrid responded ${response.status}: ${errorText.slice(0, 300)}` };
+  try {
+    await client.send({
+      from: `Stephen's 80th Birthday <${gmailUser}>`,
+      to: `${rsvp.full_name} <${rsvp.email}>`,
+      subject,
+      html,
+    });
+    await client.close();
+    return { ok: true };
+  } catch (err) {
+    try {
+      await client.close();
+    } catch {
+      // ignore close errors — the send failure is what matters
+    }
+    return { ok: false, error: `Gmail SMTP send failed: ${String(err).slice(0, 300)}` };
   }
-
-  return { ok: true };
 }
