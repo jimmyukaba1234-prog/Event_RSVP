@@ -66,8 +66,8 @@ h2 {
 .hero__image-frame {
   max-width: var(--max-width);
   margin: 0 auto;
-  aspect-ratio: 4 / 5;
-  background: #efe7d8;
+  aspect-ratio: 761 / 561;
+  background: #0f1a3a;
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow-soft);
