@@ -32,6 +32,8 @@
     window.SUPABASE_CONFIG.anonKey
   );
 
+  const SEND_CONFIRMATION_URL = `${window.SUPABASE_CONFIG.url}/functions/v1/send-confirmation`;
+
   function clearErrors() {
     Object.values(fields).forEach(({ input, error }) => {
       input.classList.remove("is-invalid");
@@ -110,8 +112,15 @@
 
     setLoading(true);
 
+    // Generated client-side (not read back after insert) because the anon
+    // key has no SELECT permission on this table — RLS deliberately blocks
+    // reading rows back, even the one you just inserted. This id is what
+    // lets us trigger the confirmation email right after, without a read.
+    const id = crypto.randomUUID();
+
     try {
       const { error } = await supabaseClient.from("rsvps").insert({
+        id,
         full_name: data.full_name,
         email: data.email,
         attendance_status: data.attendance_status,
@@ -122,10 +131,24 @@
       }
 
       showSuccess();
+      triggerConfirmationEmail(id);
     } catch (err) {
       console.error("RSVP submission failed:", err);
       showGenericError();
       setLoading(false);
     }
   });
+
+  // Fire-and-forget: the guest's RSVP is already safely stored regardless
+  // of whether this email succeeds, so failures here must never block or
+  // affect the success state the guest already sees.
+  function triggerConfirmationEmail(id) {
+    fetch(SEND_CONFIRMATION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }).catch((err) => {
+      console.error("Confirmation email trigger failed:", err);
+    });
+  }
 })();

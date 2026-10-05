@@ -12,6 +12,8 @@
   // control (see supabase/functions/admin-rsvps/index.ts) — a deliberate,
   // explicit tradeoff for this event's short lifespan, not an oversight.
   const EDGE_FUNCTION_URL = `${window.SUPABASE_CONFIG.url}/functions/v1/admin-rsvps`;
+  const CHECKIN_URL = `${window.SUPABASE_CONFIG.url}/functions/v1/checkin`;
+  const SEND_PENDING_URL = `${window.SUPABASE_CONFIG.url}/functions/v1/send-pending-confirmations`;
 
   /**
    * Data source for the dashboard. Calls the admin-rsvps Edge Function.
@@ -41,6 +43,7 @@
   const statAttendingEl = document.getElementById("stat-attending");
   const statMaybeEl = document.getElementById("stat-maybe");
   const statNotAttendingEl = document.getElementById("stat-not-attending");
+  const statCheckedInEl = document.getElementById("stat-checked-in");
 
   const searchInput = document.getElementById("search-input");
   const statusFilter = document.getElementById("status-filter");
@@ -51,6 +54,8 @@
 
   const exportCsvBtn = document.getElementById("export-csv-btn");
   const exportStatusEl = document.getElementById("export-status");
+  const sendPendingBtn = document.getElementById("send-pending-btn");
+  const sendPendingStatusEl = document.getElementById("send-pending-status");
 
   // ---------- State ----------
   let allRsvps = [];
@@ -145,6 +150,7 @@
     statAttendingEl.textContent = allRsvps.filter((r) => r.attendance_status === "attending").length;
     statMaybeEl.textContent = allRsvps.filter((r) => r.attendance_status === "maybe").length;
     statNotAttendingEl.textContent = allRsvps.filter((r) => r.attendance_status === "not_attending").length;
+    statCheckedInEl.textContent = allRsvps.filter((r) => r.checked_in).length;
   }
 
   function formatDate(isoString) {
@@ -154,6 +160,43 @@
       month: "short",
       day: "numeric",
     });
+  }
+
+  function buildCheckinCell(row) {
+    if (row.checked_in) {
+      const badge = document.createElement("span");
+      badge.className = "checked-in-badge";
+      badge.textContent = "✓ Checked In";
+      return badge;
+    }
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "table-btn";
+    btn.textContent = "Check In";
+    btn.addEventListener("click", () => checkInGuest(row, btn));
+    return btn;
+  }
+
+  async function checkInGuest(row, btn) {
+    btn.disabled = true;
+    btn.textContent = "Checking in...";
+    try {
+      const response = await fetch(`${CHECKIN_URL}?id=${encodeURIComponent(row.id)}`, { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`status ${response.status}`);
+      }
+      const payload = await response.json();
+      row.checked_in = true;
+      row.checked_in_at = payload.rsvp?.checked_in_at || new Date().toISOString();
+      renderStats();
+      renderTable();
+    } catch (err) {
+      console.error("Manual check-in failed:", err);
+      btn.disabled = false;
+      btn.textContent = "Check In";
+      showError("Couldn't check in this guest. Please try again.");
+    }
   }
 
   function renderTable() {
@@ -187,10 +230,13 @@
       const dateTd = document.createElement("td");
       dateTd.textContent = formatDate(row.created_at);
 
+      const checkinTd = document.createElement("td");
+      checkinTd.appendChild(buildCheckinCell(row));
+
       const actionsTd = document.createElement("td");
       const copyBtn = document.createElement("button");
       copyBtn.type = "button";
-      copyBtn.className = "copy-email-btn";
+      copyBtn.className = "table-btn";
       copyBtn.textContent = "Copy email";
       copyBtn.addEventListener("click", () => {
         navigator.clipboard
@@ -207,7 +253,7 @@
       });
       actionsTd.appendChild(copyBtn);
 
-      tr.append(nameTd, emailTd, statusTd, dateTd, actionsTd);
+      tr.append(nameTd, emailTd, statusTd, dateTd, checkinTd, actionsTd);
       tableBody.appendChild(tr);
     });
   }
@@ -263,6 +309,33 @@
     URL.revokeObjectURL(url);
 
     exportStatusEl.textContent = `Exported ${rows.length} RSVP${rows.length === 1 ? "" : "s"} to birthday-rsvps.csv`;
+  });
+
+  // ---------- Send pending confirmations ----------
+  sendPendingBtn.addEventListener("click", async () => {
+    sendPendingBtn.disabled = true;
+    sendPendingBtn.textContent = "Sending...";
+    sendPendingStatusEl.textContent = "";
+
+    try {
+      const response = await fetch(SEND_PENDING_URL, { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`status ${response.status}`);
+      }
+      const payload = await response.json();
+      sendPendingStatusEl.textContent =
+        payload.total === 0
+          ? "Everyone has already received their confirmation email."
+          : `Sent ${payload.sent} of ${payload.total} pending confirmation email${payload.total === 1 ? "" : "s"}.` +
+            (payload.failed > 0 ? ` ${payload.failed} failed — try again.` : "");
+      await refreshData();
+    } catch (err) {
+      console.error("Send pending confirmations failed:", err);
+      sendPendingStatusEl.textContent = "Something went wrong sending emails. Please try again.";
+    } finally {
+      sendPendingBtn.disabled = false;
+      sendPendingBtn.textContent = "Send to Pending Guests";
+    }
   });
 
   // ---------- Event wiring ----------

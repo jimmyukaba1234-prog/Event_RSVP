@@ -14,32 +14,7 @@
 // stay live longer.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-// Update this list whenever the deployed domain changes (e.g. after
-// renaming the Vercel project) — the admin dashboard silently fails to
-// load data from any origin not in this set.
-const ALLOWED_ORIGINS = new Set<string>([
-  "http://localhost:5500",
-  "https://stephen80.vercel.app",
-  "https://stephen80-git-main-jim-ai-lab.vercel.app",
-]);
-
-function corsHeaders(origin: string | null): HeadersInit {
-  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : "";
-  return {
-    "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "content-type",
-    "Vary": "Origin",
-  };
-}
-
-function jsonResponse(body: unknown, status: number, headers: HeadersInit) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...headers, "content-type": "application/json" },
-  });
-}
+import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin");
@@ -65,7 +40,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from("rsvps")
-      .select("id, full_name, email, attendance_status, created_at")
+      .select("id, full_name, email, attendance_status, created_at, checked_in, checked_in_at")
       .order("created_at", { ascending: false });
 
     if (error) {

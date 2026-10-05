@@ -222,6 +222,14 @@ main {
   margin-bottom: 16px;
 }
 
+.view__subheading {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  margin: 32px 0 10px;
+}
+
 /* ---------- Error / loading / empty ---------- */
 .admin-error {
   margin: 16px 28px 0;
@@ -270,6 +278,10 @@ main {
 
 .stat-card--not_attending {
   border-top-color: var(--color-not);
+}
+
+.stat-card--checked-in {
+  border-top-color: var(--color-gold);
 }
 
 .stat-card__label {
@@ -391,7 +403,7 @@ tbody tr:hover {
 }
 
 /* ---------- Row actions ---------- */
-.copy-email-btn {
+.table-btn {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-accent);
@@ -400,12 +412,29 @@ tbody tr:hover {
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
 }
 
-.copy-email-btn:hover {
+.table-btn:hover:not(:disabled) {
   border-color: var(--color-accent);
   background: rgba(31, 47, 88, 0.06);
+}
+
+.table-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checked-in-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  white-space: nowrap;
 }
 
 /* ---------- Export view ---------- */

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Guest Check-In — 80th Birthday</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/checkin.css" />
+</head>
+<body>
+  <div class="checkin-screen">
+    <div class="checkin-card">
+      <p class="checkin-card__eyebrow">Guest Check-In</p>
+      <h1 class="checkin-card__title">80th Birthday Celebration</h1>
+
+      <p id="checkin-loading" class="checkin-state">Looking up guest&hellip;</p>
+
+      <p id="checkin-error" class="checkin-state checkin-state--error" hidden></p>
+
+      <div id="checkin-found" hidden>
+        <p class="checkin-guest-name" id="checkin-guest-name"></p>
+        <span class="badge" id="checkin-guest-status"></span>
+        <button type="button" id="checkin-confirm-btn" class="checkin-confirm-btn">Confirm Check-In</button>
+      </div>
+
+      <p id="checkin-success" class="checkin-state checkin-state--success" hidden></p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/checkin.js"></script>
+</body>
+</html>

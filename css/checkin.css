@@ -1,0 +1,147 @@
+/* Same brand variables as css/style.css — duplicated intentionally, no
+   build step to share them across files without one. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #f7f4ec;
+  --color-surface: #ffffff;
+  --color-ink: #20232c;
+  --color-ink-soft: #5b6170;
+  --color-accent: #1f2f58;
+  --color-accent-dark: #121c3a;
+  --color-gold: #c7a052;
+  --color-border: #e2ddd0;
+  --color-error: #a3321f;
+  --color-error-bg: #fbeae6;
+
+  --color-success: #2f7a4d;
+  --color-success-bg: #e8f3ec;
+  --color-maybe: #a9790f;
+  --color-maybe-bg: #faf1dc;
+  --color-not: #a3321f;
+  --color-not-bg: #fbeae6;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius: 10px;
+  --shadow-soft: 0 6px 24px rgba(43, 36, 32, 0.08);
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: var(--color-bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.checkin-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.checkin-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 36px 28px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.checkin-card__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--color-gold);
+  margin-bottom: 6px;
+}
+
+.checkin-card__title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  margin-bottom: 24px;
+}
+
+.checkin-state {
+  color: var(--color-ink-soft);
+  font-size: 0.95rem;
+}
+
+.checkin-state--error {
+  color: var(--color-error);
+}
+
+.checkin-state--success {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.checkin-guest-name {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+  margin-bottom: 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.badge--attending {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.badge--maybe {
+  background: var(--color-maybe-bg);
+  color: var(--color-maybe);
+}
+
+.badge--not_attending {
+  background: var(--color-not-bg);
+  color: var(--color-not);
+}
+
+.checkin-confirm-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 0;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.checkin-confirm-btn:hover:not(:disabled) {
+  background: var(--color-accent-dark);
+}
+
+.checkin-confirm-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

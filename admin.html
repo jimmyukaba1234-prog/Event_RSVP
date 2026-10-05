@@ -61,6 +61,10 @@
               <span class="stat-card__label">Not Attending</span>
               <span class="stat-card__value" id="stat-not-attending">&ndash;</span>
             </div>
+            <div class="stat-card stat-card--checked-in">
+              <span class="stat-card__label">Checked In</span>
+              <span class="stat-card__value" id="stat-checked-in">&ndash;</span>
+            </div>
           </div>
         </section>
 
@@ -94,6 +98,7 @@
                   <th>Email</th>
                   <th>Attendance</th>
                   <th>Submitted</th>
+                  <th>Check-In</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -118,6 +123,16 @@
             </button>
           </div>
           <p class="export-status" id="export-status"></p>
+
+          <h3 class="view__subheading">Email Confirmations</h3>
+          <p class="export-description">
+            Send the confirmation email (with check-in QR code) to every guest who hasn't received one yet.
+            Safe to click more than once &mdash; guests who already got theirs are skipped.
+          </p>
+          <div class="export-actions">
+            <button class="btn-primary" id="send-pending-btn" type="button">Send to Pending Guests</button>
+          </div>
+          <p class="export-status" id="send-pending-status"></p>
         </section>
       </main>
     </div>
