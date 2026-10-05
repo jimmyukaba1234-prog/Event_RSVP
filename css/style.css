@@ -350,15 +350,6 @@ footer {
 
 /* ---------- Responsive ---------- */
 @media (min-width: 600px) {
-  .event-details {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .detail-card + .detail-card {
-    border-top: none;
-    border-left: 1px solid var(--color-border);
-  }
-
   .event-intro h1 {
     font-size: 2.8rem;
   }

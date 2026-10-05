@@ -16,6 +16,9 @@
   const statusEl = document.getElementById("checkin-guest-status");
   const confirmBtn = document.getElementById("checkin-confirm-btn");
   const successEl = document.getElementById("checkin-success");
+  const resultHeadingEl = document.getElementById("checkin-result-heading");
+  const resultNameEl = document.getElementById("checkin-result-name");
+  const resultSubEl = document.getElementById("checkin-result-sub");
 
   function showOnly(visibleEl) {
     [loadingEl, errorEl, foundEl, successEl].forEach((el) => {
@@ -28,6 +31,12 @@
     showOnly(errorEl);
   }
 
+  function formatTime(isoString) {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+
   function renderFound(rsvp) {
     nameEl.textContent = rsvp.full_name;
     statusEl.textContent = STATUS_LABELS[rsvp.attendance_status] || rsvp.attendance_status;
@@ -36,9 +45,17 @@
   }
 
   function renderSuccess(rsvp, alreadyCheckedIn) {
-    successEl.textContent = alreadyCheckedIn
-      ? `${rsvp.full_name} was already checked in.`
-      : `${rsvp.full_name} is checked in. Welcome!`;
+    resultNameEl.textContent = rsvp.full_name;
+    if (alreadyCheckedIn) {
+      successEl.classList.add("is-already");
+      resultHeadingEl.textContent = "Already Checked In";
+      const time = formatTime(rsvp.checked_in_at);
+      resultSubEl.textContent = time ? `Checked in at ${time}` : "This guest was already checked in.";
+    } else {
+      successEl.classList.remove("is-already");
+      resultHeadingEl.textContent = "Checked In";
+      resultSubEl.textContent = "Welcome to the celebration!";
+    }
     showOnly(successEl);
   }
 

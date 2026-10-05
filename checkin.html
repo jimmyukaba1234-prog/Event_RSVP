@@ -16,7 +16,7 @@
 <body>
   <div class="checkin-screen">
     <div class="checkin-card">
-      <p class="checkin-card__eyebrow">Guest Check-In</p>
+      <p class="checkin-card__eyebrow">Usher Check-In</p>
       <h1 class="checkin-card__title">80th Birthday Celebration</h1>
 
       <p id="checkin-loading" class="checkin-state">Looking up guest&hellip;</p>
@@ -26,10 +26,16 @@
       <div id="checkin-found" hidden>
         <p class="checkin-guest-name" id="checkin-guest-name"></p>
         <span class="badge" id="checkin-guest-status"></span>
+        <p class="checkin-prompt">Confirm this guest has arrived:</p>
         <button type="button" id="checkin-confirm-btn" class="checkin-confirm-btn">Confirm Check-In</button>
       </div>
 
-      <p id="checkin-success" class="checkin-state checkin-state--success" hidden></p>
+      <div id="checkin-success" class="checkin-success" hidden>
+        <p class="checkin-result-icon" id="checkin-result-icon">&#10003;</p>
+        <p class="checkin-result-heading" id="checkin-result-heading"></p>
+        <p class="checkin-result-name" id="checkin-result-name"></p>
+        <p class="checkin-result-sub" id="checkin-result-sub"></p>
+      </div>
     </div>
   </div>
 
